@@ -16,47 +16,84 @@ mongoose
 
 const Item = mongoose.model("Item", itemSchema);
 
-app.post("/items", async (req, res) => {
+app.get("/items", async (req, res) => {
   try {
-    console.log("Received request body:", req.body);
-
-    const { name, description, price } = req.body;
-
-    console.log("Extracted fields:", { name, description, price });
-
-    if (!name || !description || price === undefined) {
-      console.log("Validation failed:", { name, description, price });
-      return res
-        .status(400)
-        .json({ error: "All fields (name, description, price) are required" });
-    }
-
-    const newItem = new Item({ name, description, price });
-    console.log("New item before save:", newItem.toObject());
-
-    const savedItem = await newItem.save();
-    console.log("Saved item:", savedItem.toObject());
-
-    res.status(201).json(savedItem);
+    const items = await Item.find();
+    res.status(200).json(items);
   } catch (err) {
-    console.error("Error creating item:", err);
-    res
-      .status(500)
-      .json({ error: "Error creating item", details: err.message });
+    res.status(500).json({ error: "Error fetching items" });
+  }
+});
+
+app.get("/items/:id", async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    res.status(200).json(item);
+  } catch (err) {
+    res.status(500).json({ error: "Error fetching item" });
   }
 });
 
 app.post("/items", async (req, res) => {
   try {
-    const items = await Item.find();
-    console.log("Retrieved items:", items);
-    res.status(200).json(items);
+    const { name, description, price } = req.body;
+
+    if (!name || !description || !price) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const newItem = new Item({ name, description, price });
+    const savedItem = await newItem.save();
+    res.status(201).json(savedItem);
   } catch (err) {
-    console.error("Error fetching items:", err);
-    res
-      .status(500)
-      .json({ error: "Error fetching items", details: err.message });
+    res.status(500).json({ error: "Error creating item" });
   }
+});
+
+app.put("/items/:id", async (req, res) => {
+  try {
+    const { name, description, price } = req.body;
+
+    if (!name || !description || !price) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const updatedItem = await Item.findByIdAndUpdate(
+      req.params.id,
+      { name, description, price },
+      { new: true }
+    );
+
+    if (!updatedItem) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    res.status(200).json(updatedItem);
+  } catch (err) {
+    res.status(500).json({ error: "Error updating item" });
+  }
+});
+
+app.delete("/items/:id", async (req, res) => {
+  try {
+    const deletedItem = await Item.findByIdAndDelete(req.params.id);
+
+    if (!deletedItem) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: "Error deleting item" });
+  }
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something went wrong!" });
 });
 
 app.listen(3000, () => {
