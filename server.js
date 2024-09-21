@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
 require("dotenv").config();
-const itemSchema = require("./model/schema");
+const Item = require("./model/item");
 app.use(express.json());
 
 mongoose
@@ -13,8 +13,6 @@ mongoose
   .catch((err) => {
     console.error("MongoDB connection error:", err);
   });
-
-const Item = mongoose.model("Item", itemSchema);
 
 app.get("/items", async (req, res) => {
   try {

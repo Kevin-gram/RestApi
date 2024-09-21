@@ -7,4 +7,5 @@ const itemSchema = new mongoose.Schema(
   },
   { versionKey: false }
 );
-module.exports = itemSchema;
+const Item = mongoose.model("Item", itemSchema);
+module.exports = Item;
