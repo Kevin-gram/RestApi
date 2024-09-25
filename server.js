@@ -35,7 +35,7 @@ app.get("/items/:id", async (req, res) => {
   }
 });
 
-app.post("/items", async (req, res) => {
+app.post("/items", async (req, res, next) => {
   try {
     const { name, description, price } = req.body;
 
@@ -47,10 +47,11 @@ app.post("/items", async (req, res) => {
     const savedItem = await newItem.save();
     res.status(201).json(savedItem);
   } catch (err) {
+    next(err);
     res.status(500).json({ error: "Error creating item" });
   }
 });
-
+// update with put 
 app.put("/items/:id", async (req, res) => {
   try {
     const { name, description, price } = req.body;
